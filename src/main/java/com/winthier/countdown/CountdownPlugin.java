@@ -26,7 +26,7 @@ public class CountdownPlugin extends JavaPlugin implements Listener
     // Internal
     Scoreboard scoreboard;
     Objective sidebar;
-    long targetTime;
+    long startTime, endTime;
     BukkitRunnable task;
     Set<UUID> ignorers = new HashSet<UUID>();
     int seconds = 0;
@@ -109,10 +109,11 @@ public class CountdownPlugin extends JavaPlugin implements Listener
     void start()
     {
         configure();
-        if (!enabled) return;
-        setupScoreboard();
-        setupPlayers();
-        getServer().getPluginManager().registerEvents(this, this);
+        if (enabled) {
+            setupScoreboard();
+            setupPlayers();
+            getServer().getPluginManager().registerEvents(this, this);
+        }
         startTask();
     }
 
@@ -130,7 +131,7 @@ public class CountdownPlugin extends JavaPlugin implements Listener
 
     void startTask()
     {
-        stopTask();
+        if (task != null) return;
         task = new BukkitRunnable() {
             @Override public void run() {
                 onSecondPassed();
@@ -152,10 +153,17 @@ public class CountdownPlugin extends JavaPlugin implements Listener
 
     void onSecondPassed()
     {
-        updateTimer();
-        if (seconds++ > 10) {
-            seconds = 0;
-            setupPlayers();
+        if (enabled) {
+            updateTimer();
+            if (seconds++ > 10) {
+                seconds = 0;
+                setupPlayers();
+            }
+        } else {
+            if (seconds++ > 60) {
+                seconds = 0;
+                start();
+            }
         }
     }
 
@@ -163,12 +171,19 @@ public class CountdownPlugin extends JavaPlugin implements Listener
     {
         reloadConfig();
         enabled = getConfig().getBoolean("Enabled");
+        if (!enabled) return;
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
         try {
-            targetTime = df.parse(getConfig().getString("Time")).getTime();
+            startTime = df.parse(getConfig().getString("StartTime")).getTime();
+            endTime = df.parse(getConfig().getString("EndTime")).getTime();
         } catch (ParseException pe) {
             pe.printStackTrace();
-            targetTime = 0;
+            startTime = 0;
+            endTime = 0;
+        }
+        if (endTime <= System.currentTimeMillis()) {
+            enabled = false;
+            return;
         }
         titlePrefix = format(getConfig().getString("TitlePrefix"));
         titleSuffix = format(getConfig().getString("TitleSuffix"));
@@ -189,13 +204,24 @@ public class CountdownPlugin extends JavaPlugin implements Listener
 
     void updateTimer()
     {
-        long timeLeft = targetTime - System.currentTimeMillis();
-        if (timeLeft < 0) timeLeft = 0;
-        long seconds = timeLeft / 1000;
-        long minutes = seconds / 60;
-        long hours = minutes / 60;
-        String title = format("%s&f%02d&3:&f%02d&3:&f%02d%s", titlePrefix, hours % 24, minutes % 60, seconds % 60, titleSuffix);
-        sidebar.setDisplayName(title);
+        long now = System.currentTimeMillis();
+        if (now >= endTime) {
+            enabled = false;
+            resetPlayers();
+            return;
+        }
+        long timeLeft = startTime - System.currentTimeMillis();
+        if (timeLeft < 0) {
+            timeLeft = 0;
+            String title = format("%s&cUnderway&r%s", titlePrefix, titleSuffix);
+            sidebar.setDisplayName(title);
+        } else {
+            long seconds = timeLeft / 1000;
+            long minutes = seconds / 60;
+            long hours = minutes / 60;
+            String title = format("%s&f%02d&3:&f%02d&3:&f%02d%s", titlePrefix, hours % 24, minutes % 60, seconds % 60, titleSuffix);
+            sidebar.setDisplayName(title);
+        }
     }
 
     void setupPlayers()
