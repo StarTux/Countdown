@@ -29,6 +29,7 @@ public class CountdownPlugin extends JavaPlugin implements Listener
     long targetTime;
     BukkitRunnable task;
     Set<UUID> ignorers = new HashSet<UUID>();
+    int seconds = 0;
     // Config
     boolean enabled;
     String titlePrefix, titleSuffix;
@@ -152,6 +153,10 @@ public class CountdownPlugin extends JavaPlugin implements Listener
     void onSecondPassed()
     {
         updateTimer();
+        if (seconds++ > 10) {
+            seconds = 0;
+            setupPlayers();
+        }
     }
 
     void configure()
@@ -197,7 +202,9 @@ public class CountdownPlugin extends JavaPlugin implements Listener
     {
         for (Player player : getServer().getOnlinePlayers()) {
             if (!ignorers.contains(player.getUniqueId())) {
-                player.setScoreboard(scoreboard);
+                if (player.getScoreboard() == getServer().getScoreboardManager().getMainScoreboard()) {
+                    player.setScoreboard(scoreboard);
+                }
             }
         }
     }
