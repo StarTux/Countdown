@@ -219,7 +219,7 @@ public class CountdownPlugin extends JavaPlugin implements Listener
             long seconds = timeLeft / 1000;
             long minutes = seconds / 60;
             long hours = minutes / 60;
-            String title = format("%s&f%02d&3:&f%02d&3:&f%02d%s", titlePrefix, hours % 24, minutes % 60, seconds % 60, titleSuffix);
+            String title = format("%s&f%02d&3:&f%02d&3:&f%02d%s", titlePrefix, hours, minutes % 60, seconds % 60, titleSuffix);
             sidebar.setDisplayName(title);
         }
     }
