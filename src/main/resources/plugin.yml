@@ -1,9 +1,12 @@
 name: Countdown
 description: Display a countdown in the sidebar
-author: StarTux
 version: 0.1
+author: StarTux
 main: com.winthier.countdown.CountdownPlugin
+website: https://github.com/StarTux/Countdown
+api-version: 1.13
 depend: []
+softdepend: []
 commands:
   countdown:
     description: Admin interface

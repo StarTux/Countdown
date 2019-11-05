@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,93 +18,52 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
-public class CountdownPlugin extends JavaPlugin implements Listener
-{
+public final class CountdownPlugin extends JavaPlugin implements Listener {
     // Internal
     Scoreboard scoreboard;
     Objective sidebar;
-    long startTime, endTime;
+    long startTime;
+    long endTime;
     BukkitRunnable task;
     Set<UUID> ignorers = new HashSet<UUID>();
     int seconds = 0;
     // Config
     boolean enabled;
-    String titlePrefix, titleSuffix;
+    String titlePrefix;
+    String titleSuffix;
     List<String> messages;
-    
+
     @Override
-    public void onEnable()
-    {
+    public void onEnable() {
         saveDefaultConfig();
-        getCommand("countdown").setExecutor(new CountdownCommand());
-        getCommand("sidebar").setExecutor(new SidebarCommand());
+        getCommand("countdown").setExecutor(new CountdownCommand(this));
+        getCommand("sidebar").setExecutor(new SidebarCommand(this));
         start();
     }
-    
+
     @Override
-    public void onDisable()
-    {
+    public void onDisable() {
         stop();
     }
 
-
-    class CountdownCommand implements CommandExecutor {
-        @Override
-        public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
-        {
-            if (args.length == 1 && "reload".equalsIgnoreCase(args[0])) {
-                restart();
-                sender.sendMessage("Configuration reloaded");
-            } else {
-                return false;
-            }
-            return true;
-        }
-    }
-
-    class SidebarCommand implements CommandExecutor {
-        @Override
-        public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
-        {
-            Player player = sender instanceof Player ? (Player)sender : null;
-            if (player == null) {
-                sender.sendMessage("Player expected");
-                return true;
-            }
-            if (args.length == 1) {
-                if ("on".equalsIgnoreCase(args[0])) {
-                    setIgnore(player, false);
-                    player.sendMessage(format("&bTurned sidebar on"));
-                } else if ("off".equalsIgnoreCase(args[0])) {
-                    setIgnore(player, true);
-                    player.sendMessage(format("&bTurned sidebar off"));
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-            return true;
-        } 
-    }
-
-    void setIgnore(Player player, boolean value)
-    {
+    void setIgnore(Player player, boolean value) {
+        Scoreboard main = getServer().getScoreboardManager().getMainScoreboard();
         if (value) {
             ignorers.add(player.getUniqueId());
-            if (enabled && player.getScoreboard() == scoreboard) {
-                player.setScoreboard(getServer().getScoreboardManager().getMainScoreboard());
+            if (enabled && player.getScoreboard().equals(scoreboard)) {
+                player.setScoreboard(main);
             }
         } else {
             ignorers.remove(player.getUniqueId());
-            if (enabled && player.getScoreboard() == getServer().getScoreboardManager().getMainScoreboard()) {
-                player.setScoreboard(scoreboard);
+            if (enabled) {
+                if (player.getScoreboard().equals(main)) {
+                    player.setScoreboard(scoreboard);
+                }
             }
         }
     }
-    
-    void start()
-    {
+
+    void start() {
         configure();
         if (enabled) {
             setupScoreboard();
@@ -117,31 +73,27 @@ public class CountdownPlugin extends JavaPlugin implements Listener
         startTask();
     }
 
-    void stop()
-    {
+    void stop() {
         resetPlayers();
         stopTask();
     }
 
-    void restart()
-    {
+    void restart() {
         stop();
         start();
     }
 
-    void startTask()
-    {
+    void startTask() {
         if (task != null) return;
         task = new BukkitRunnable() {
-            @Override public void run() {
-                onSecondPassed();
-            }
-        };
+                @Override public void run() {
+                    onSecondPassed();
+                }
+            };
         task.runTaskTimer(this, 20, 20);
     }
 
-    void stopTask()
-    {
+    void stopTask() {
         if (task == null) return;
         try {
             task.cancel();
@@ -151,8 +103,7 @@ public class CountdownPlugin extends JavaPlugin implements Listener
         task = null;
     }
 
-    void onSecondPassed()
-    {
+    void onSecondPassed() {
         if (enabled) {
             updateTimer();
             if (seconds++ > 10) {
@@ -167,8 +118,7 @@ public class CountdownPlugin extends JavaPlugin implements Listener
         }
     }
 
-    void configure()
-    {
+    void configure() {
         reloadConfig();
         enabled = getConfig().getBoolean("Enabled");
         if (!enabled) return;
@@ -191,8 +141,7 @@ public class CountdownPlugin extends JavaPlugin implements Listener
         for (int i = 0; i < messages.size(); ++i) messages.set(i, format(messages.get(i)));
     }
 
-    void setupScoreboard()
-    {
+    void setupScoreboard() {
         scoreboard = getServer().getScoreboardManager().getNewScoreboard();
         sidebar = scoreboard.registerNewObjective("countdown", "dummy");
         sidebar.setDisplaySlot(DisplaySlot.SIDEBAR);
@@ -202,8 +151,7 @@ public class CountdownPlugin extends JavaPlugin implements Listener
         updateTimer();
     }
 
-    void updateTimer()
-    {
+    void updateTimer() {
         long now = System.currentTimeMillis();
         if (now >= endTime) {
             enabled = false;
@@ -216,44 +164,43 @@ public class CountdownPlugin extends JavaPlugin implements Listener
             String title = format("%s&cUnderway&r%s", titlePrefix, titleSuffix);
             sidebar.setDisplayName(title);
         } else {
-            long seconds = timeLeft / 1000;
-            long minutes = seconds / 60;
+            long secs = timeLeft / 1000;
+            long minutes = secs / 60;
             long hours = minutes / 60;
-            String title = format("%s&f%02d&3:&f%02d&3:&f%02d%s", titlePrefix, hours, minutes % 60, seconds % 60, titleSuffix);
+            String title = format("%s&f%02d&3:&f%02d&3:&f%02d%s", titlePrefix,
+                                  hours, minutes % 60, secs % 60, titleSuffix);
             sidebar.setDisplayName(title);
         }
     }
 
-    void setupPlayers()
-    {
+    void setupPlayers() {
         for (Player player : getServer().getOnlinePlayers()) {
             if (!ignorers.contains(player.getUniqueId())) {
-                if (player.getScoreboard() == getServer().getScoreboardManager().getMainScoreboard()) {
+                Scoreboard main = getServer().getScoreboardManager().getMainScoreboard();
+                if (player.getScoreboard().equals(main)) {
                     player.setScoreboard(scoreboard);
                 }
             }
         }
     }
 
-    void resetPlayers()
-    {
+    void resetPlayers() {
         for (Player player : getServer().getOnlinePlayers()) {
-            if (player.getScoreboard() == scoreboard) {
-                player.setScoreboard(getServer().getScoreboardManager().getMainScoreboard());
+            if (player.getScoreboard().equals(scoreboard)) {
+                Scoreboard main = getServer().getScoreboardManager().getMainScoreboard();
+                player.setScoreboard(main);
             }
         }
     }
 
-    String format(String msg, Object... args)
-    {
+    static String format(String msg, Object... args) {
         msg = ChatColor.translateAlternateColorCodes('&', msg);
         if (args.length > 0) msg = String.format(msg, args);
         return msg;
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event)
-    {
+    public void onPlayerJoin(PlayerJoinEvent event) {
         if (!enabled) return;
         if (!ignorers.contains(event.getPlayer().getUniqueId())) {
             event.getPlayer().setScoreboard(scoreboard);
