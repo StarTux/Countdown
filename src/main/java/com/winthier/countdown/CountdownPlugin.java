@@ -10,7 +10,6 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -30,6 +29,7 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         saveDefaultConfig();
         getCommand("countdown").setExecutor(new CountdownCommand(this));
         start();
+        getServer().getPluginManager().registerEvents(this, this);
     }
 
     @Override
@@ -39,9 +39,6 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
 
     void start() {
         configure();
-        if (enabled) {
-            getServer().getPluginManager().registerEvents(this, this);
-        }
         startTask();
     }
 
@@ -77,14 +74,10 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
     void onSecondPassed() {
         if (enabled) {
             updateTimer();
-            if (seconds++ > 10) {
-                seconds = 0;
-            }
-        } else {
-            if (seconds++ > 60) {
-                seconds = 0;
-                start();
-            }
+        }
+        if (seconds++ > 10) {
+            configure();
+            seconds = 0;
         }
     }
 
@@ -123,11 +116,6 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         msg = ChatColor.translateAlternateColorCodes('&', msg);
         if (args.length > 0) msg = String.format(msg, args);
         return msg;
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        if (!enabled) return;
     }
 
     @EventHandler
