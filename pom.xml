@@ -20,6 +20,12 @@
       <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
     </repository>
 
+    <!-- Cavetale Repo -->
+    <repository>
+      <id>cavetale</id>
+      <url>https://cavetale.com/jenkins/plugin/repository/everything/</url>
+    </repository>
+
   </repositories>
   <dependencies>
 
@@ -27,7 +33,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-      <version>1.14.4-R0.1-SNAPSHOT</version>
+      <version>1.16.1-R0.1-SNAPSHOT</version>
     </dependency>
 
     <!-- Lombok -->
@@ -36,6 +42,13 @@
       <artifactId>lombok</artifactId>
       <version>1.14.8</version>
       <scope>provided</scope>
+    </dependency>
+
+    <!-- Sidebar -->
+    <dependency>
+      <groupId>com.cavetale.sidebar</groupId>
+      <artifactId>sidebar</artifactId>
+      <version>0.1-SNAPSHOT</version>
     </dependency>
 
   </dependencies>
