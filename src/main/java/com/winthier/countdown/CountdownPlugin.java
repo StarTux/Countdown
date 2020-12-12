@@ -5,8 +5,8 @@ import com.cavetale.sidebar.Priority;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,8 +20,6 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
     int seconds = 0;
     // Config
     boolean enabled;
-    String titlePrefix;
-    String titleSuffix;
     List<String> messages;
 
     @Override
@@ -98,8 +96,6 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
             enabled = false;
             return;
         }
-        titlePrefix = format(getConfig().getString("TitlePrefix"));
-        titleSuffix = format(getConfig().getString("TitleSuffix"));
         messages = getConfig().getStringList("Messages");
         for (int i = 0; i < messages.size(); ++i) messages.set(i, format(messages.get(i)));
     }
@@ -122,20 +118,20 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
     public void onPlayerSidebar(PlayerSidebarEvent event) {
         if (!enabled) return;
         long timeLeft = startTime - System.currentTimeMillis();
-        List<String> lines = new ArrayList<>();
-        if (timeLeft < 0) {
-            timeLeft = 0;
-            String title = format("%s&cUnderway&r%s", titlePrefix, titleSuffix);
-            lines.add(title);
-        } else {
-            long secs = timeLeft / 1000;
-            long minutes = secs / 60;
-            long hours = minutes / 60;
-            String title = format("%s&f%02d&3:&f%02d&3:&f%02d%s", titlePrefix,
-                                  hours, minutes % 60, secs % 60, titleSuffix);
-            lines.add(title);
-        }
-        lines.addAll(messages);
+        String timeFormat = timeLeft < 0
+            ? "&cUnderway"
+            : formatTime(timeLeft);
+        List<String> lines = messages.stream()
+            .map(s -> s.replace("{time}", timeFormat))
+            .map(s -> format(s))
+            .collect(Collectors.toList());
         event.addLines(this, Priority.DEFAULT, lines);
+    }
+
+    String formatTime(long timeLeft) {
+        long secs = timeLeft / 1000;
+        long minutes = secs / 60;
+        long hours = minutes / 60;
+        return String.format("&f%02d&7:&f%02d&7:&f%02d", hours, minutes % 60, secs % 60);
     }
 }
