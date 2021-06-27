@@ -119,7 +119,7 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         if (!enabled) return;
         long timeLeft = startTime - System.currentTimeMillis();
         String timeFormat = timeLeft < 0
-            ? ""
+            ? "NOW"
             : formatTime(timeLeft);
         List<String> lines = messages.stream()
             .map(s -> s.replace("{time}", timeFormat))
@@ -132,6 +132,6 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         long secs = timeLeft / 1000;
         long minutes = secs / 60;
         long hours = minutes / 60;
-        return String.format("%dh %dm", hours, minutes % 60);
+        return String.format("%dh:%dm:%ds", hours, minutes % 60, secs % 60);
     }
 }
