@@ -132,6 +132,6 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         long secs = timeLeft / 1000;
         long minutes = secs / 60;
         long hours = minutes / 60;
-        return String.format("%dh:%dm:%ds", hours, minutes % 60, secs % 60);
+        return String.format("%dh %dm %ds", hours, minutes % 60, secs % 60);
     }
 }
