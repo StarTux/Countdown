@@ -1,12 +1,16 @@
 package com.winthier.countdown;
 
+import com.cavetale.core.font.Emoji;
+import com.cavetale.core.font.GlyphPolicy;
 import com.cavetale.sidebar.PlayerSidebarEvent;
 import com.cavetale.sidebar.Priority;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,13 +18,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public final class CountdownPlugin extends JavaPlugin implements Listener {
-    long startTime;
-    long endTime;
-    BukkitRunnable task;
-    int seconds = 0;
+    protected long startTime;
+    protected long endTime;
+    protected BukkitRunnable task;
+    protected int seconds = 0;
     // Config
-    boolean enabled;
-    List<String> messages;
+    protected boolean enabled;
+    protected final List<String> messages = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -35,21 +39,21 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         stop();
     }
 
-    void start() {
+    protected void start() {
         configure();
         startTask();
     }
 
-    void stop() {
+    protected void stop() {
         stopTask();
     }
 
-    void restart() {
+    protected void restart() {
         stop();
         start();
     }
 
-    void startTask() {
+    protected void startTask() {
         if (task != null) return;
         task = new BukkitRunnable() {
                 @Override public void run() {
@@ -59,7 +63,7 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         task.runTaskTimer(this, 20, 20);
     }
 
-    void stopTask() {
+    protected void stopTask() {
         if (task == null) return;
         try {
             task.cancel();
@@ -69,7 +73,7 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         task = null;
     }
 
-    void onSecondPassed() {
+    protected void onSecondPassed() {
         if (enabled) {
             updateTimer();
         }
@@ -79,7 +83,7 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    void configure() {
+    protected void configure() {
         reloadConfig();
         enabled = getConfig().getBoolean("Enabled");
         if (!enabled) return;
@@ -96,22 +100,18 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
             enabled = false;
             return;
         }
-        messages = getConfig().getStringList("Messages");
-        for (int i = 0; i < messages.size(); ++i) messages.set(i, format(messages.get(i)));
+        messages.clear();
+        for (String line : getConfig().getStringList("Messages")) {
+            messages.add(ChatColor.translateAlternateColorCodes('&', line));
+        }
     }
 
-    void updateTimer() {
+    protected void updateTimer() {
         long now = System.currentTimeMillis();
         if (now >= endTime) {
             enabled = false;
             return;
         }
-    }
-
-    static String format(String msg, Object... args) {
-        msg = ChatColor.translateAlternateColorCodes('&', msg);
-        if (args.length > 0) msg = String.format(msg, args);
-        return msg;
     }
 
     @EventHandler
@@ -121,14 +121,14 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
         String timeFormat = timeLeft < 0
             ? "NOW"
             : formatTime(timeLeft);
-        List<String> lines = messages.stream()
+        List<Component> lines = messages.stream()
             .map(s -> s.replace("{time}", timeFormat))
-            .map(s -> format(s))
+            .map(s -> Emoji.replaceText(s, GlyphPolicy.HIDDEN, false).asComponent())
             .collect(Collectors.toList());
-        event.addLines(this, Priority.DEFAULT, lines);
+        event.add(this, Priority.DEFAULT, lines);
     }
 
-    String formatTime(long timeLeft) {
+    protected String formatTime(long timeLeft) {
         long secs = timeLeft / 1000;
         long minutes = secs / 60;
         long hours = minutes / 60;

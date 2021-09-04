@@ -1,18 +1,25 @@
-name: Countdown
-description: Display a countdown in the Sidebar
-version: 0.1
-author: StarTux
 main: com.winthier.countdown.CountdownPlugin
+name: Countdown
+
+version: 0.1
+api-version: 1.17
+
+author: StarTux
+description: Display a countdown in the Sidebar
 website: https://github.com/StarTux/Countdown
-api-version: 1.13
+
 depend: [Sidebar]
 softdepend: []
+
 commands:
+
   countdown:
     description: Admin interface
     permission: countdown.countdown
     usage: /<command> reload
+
 permissions:
+
   countdown.countdown:
     description: Use /countdown
     default: op
