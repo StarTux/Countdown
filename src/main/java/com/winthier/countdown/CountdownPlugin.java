@@ -101,7 +101,9 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
             return;
         }
         messages.clear();
-        for (String line : getConfig().getStringList("Messages")) {
+        String messagesKey = getConfig().getString("MessagesKey");
+        if (messagesKey == null) messagesKey = "Messages";
+        for (String line : getConfig().getStringList(messagesKey)) {
             messages.add(ChatColor.translateAlternateColorCodes('&', line));
         }
     }
