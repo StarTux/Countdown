@@ -4,6 +4,7 @@ import com.cavetale.core.font.Emoji;
 import com.cavetale.core.font.GlyphPolicy;
 import com.cavetale.sidebar.PlayerSidebarEvent;
 import com.cavetale.sidebar.Priority;
+import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -84,13 +87,20 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
     }
 
     protected void configure() {
-        reloadConfig();
-        enabled = getConfig().getBoolean("Enabled");
+        File file = new File("/home/mc/public/config/Countdown/config.yml");
+        final ConfigurationSection config;
+        if (file.exists()) {
+            config = YamlConfiguration.loadConfiguration(file);
+        } else {
+            reloadConfig();
+            config = getConfig();
+        }
+        enabled = config.getBoolean("Enabled");
         if (!enabled) return;
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss");
         try {
-            startTime = df.parse(getConfig().getString("StartTime")).getTime();
-            endTime = df.parse(getConfig().getString("EndTime")).getTime();
+            startTime = df.parse(config.getString("StartTime")).getTime();
+            endTime = df.parse(config.getString("EndTime")).getTime();
         } catch (ParseException pe) {
             pe.printStackTrace();
             startTime = 0;
@@ -101,9 +111,9 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
             return;
         }
         messages.clear();
-        String messagesKey = getConfig().getString("MessagesKey");
+        String messagesKey = config.getString("MessagesKey");
         if (messagesKey == null) messagesKey = "Messages";
-        for (String line : getConfig().getStringList(messagesKey)) {
+        for (String line : config.getStringList(messagesKey)) {
             messages.add(ChatColor.translateAlternateColorCodes('&', line));
         }
     }
