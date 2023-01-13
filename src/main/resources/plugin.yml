@@ -8,7 +8,7 @@ author: StarTux
 description: Display a countdown in the Sidebar
 website: https://github.com/StarTux/Countdown
 
-depend: [Sidebar]
+depend: [Core]
 softdepend: []
 
 commands:

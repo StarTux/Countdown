@@ -1,9 +1,9 @@
 package com.winthier.countdown;
 
+import com.cavetale.core.event.hud.PlayerHudEvent;
+import com.cavetale.core.event.hud.PlayerHudPriority;
 import com.cavetale.core.font.Emoji;
 import com.cavetale.core.font.GlyphPolicy;
-import com.cavetale.sidebar.PlayerSidebarEvent;
-import com.cavetale.sidebar.Priority;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -127,7 +127,7 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onPlayerSidebar(PlayerSidebarEvent event) {
+    public void onPlayerHud(PlayerHudEvent event) {
         if (!enabled) return;
         long timeLeft = startTime - System.currentTimeMillis();
         String timeFormat = timeLeft < 0
@@ -137,7 +137,7 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
             .map(s -> s.replace("{time}", timeFormat))
             .map(s -> Emoji.replaceText(s, GlyphPolicy.HIDDEN, false).asComponent())
             .collect(Collectors.toList());
-        event.add(this, Priority.DEFAULT, lines);
+        event.sidebar(PlayerHudPriority.LOWEST, lines);
     }
 
     protected String formatTime(long timeLeft) {
