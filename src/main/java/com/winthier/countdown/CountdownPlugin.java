@@ -31,7 +31,6 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
         getCommand("countdown").setExecutor(new CountdownCommand(this));
         start();
         getServer().getPluginManager().registerEvents(this, this);
