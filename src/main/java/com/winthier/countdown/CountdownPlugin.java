@@ -86,7 +86,10 @@ public final class CountdownPlugin extends JavaPlugin implements Listener {
     }
 
     protected void configure() {
-        File file = new File("/home/mc/public/config/Countdown/config.yml");
+        File file = new File(getDataFolder(), "config.yml");
+        if (!file.exists()) {
+            file = new File("/home/mc/public/config/Countdown/config.yml");
+        }
         final ConfigurationSection config;
         if (file.exists()) {
             config = YamlConfiguration.loadConfiguration(file);
